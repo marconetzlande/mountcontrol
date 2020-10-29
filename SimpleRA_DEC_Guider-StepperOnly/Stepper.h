@@ -1,3 +1,6 @@
+/*
+I don't know how to split this into .h and .cpp.
+*/
 #define MIN_YIELD_MICROS 100
 
 class StepperDriver {
