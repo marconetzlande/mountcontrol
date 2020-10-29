@@ -23,14 +23,19 @@ class StepperDriver {
       unsigned long last_action_end = 0;
       unsigned long next_action_interval = 0;
       unsigned long stepper_freqency = 0;
+      unsigned long stepper_interval = 0;
+      
       long steps = 0;
+      long steps_to_go = 0;
+      long steps_remaining = 0;
+      
       boolean enabled = false;
       boolean dir = false;
-      unsigned long stepper_interval = 0;
       short mode;
       short current_mode;
       boolean slowdown = false;
       boolean accellerate = false;
+      boolean gotomode = false;
     
   protected:
       short step_pin;
@@ -45,7 +50,7 @@ class StepperDriver {
     :step_pin(step_pin), dir_pin(dir_pin), enable_pin(enable_pin), m0_pin(m0_pin), m1_pin(m1_pin), m2_pin(m2_pin) {
     }
 
-    void setup() {
+    void StepperDriver::setup() {
       pinMode(step_pin,OUTPUT);
       pinMode(dir_pin,OUTPUT);
       pinMode(enable_pin,OUTPUT);
@@ -60,8 +65,8 @@ class StepperDriver {
       digitalWrite(m2_pin, HIGH);
     }
 
-    boolean actionImminent() {
-      return ((accellerate || slowdown) && (delayRemaining()<25));
+    boolean StepperDriver::actionImminent() {
+      return ((accellerate || slowdown || gotomode) && (delayRemaining()<25));
     }
 
     unsigned long StepperDriver::delayRemaining() {
@@ -152,9 +157,40 @@ class StepperDriver {
         current_mode = mode;
       }
     }
+
+    void StepperDriver::move(long s) {
+      if (s!=0)
+      if (steps_to_go == 0) {
+        dir = (s>=0);
+        steps_to_go = s;
+        steps_remaining = abs(s);
+        gotomode = true;
+      }
+    }
   
     long StepperDriver::nextAction() {
-      if (accellerate || slowdown) {
+      if (steps_remaining > 0) {
+        if (gotomode) {
+          //nach der hälfte der steps abbremsen
+          if (steps_remaining*2 < abs(steps_to_go)) {
+            accellerate = false;
+            slowdown = true;
+          } else {
+            accellerate = true;
+            slowdown = false;
+          }
+        }
+      } else {
+        if (steps_to_go != 0) {
+          steps_remaining = 0;
+          steps_to_go = 0;
+          gotomode = false;
+          slowdown = false;
+          accellerate = false;
+        }
+      }
+
+      if (accellerate || slowdown || gotomode) {
         configureMode();
     
         if (!enabled) {
@@ -163,7 +199,8 @@ class StepperDriver {
           enabled = true;
         }
         
-        if (dir) {steps = steps + RA_MICROSTEPS/mode;} else {steps = steps - RA_MICROSTEPS/mode;};
+        if (dir) {steps += RA_MICROSTEPS/mode;} else {steps -= RA_MICROSTEPS/mode;};
+        steps_remaining -= RA_MICROSTEPS/mode;
         
         delayMicros(next_action_interval, last_action_end);
         digitalWrite(step_pin, HIGH);

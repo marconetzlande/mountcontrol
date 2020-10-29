@@ -30,6 +30,18 @@ void loop () {
        DEC_Stepper.disable();
     }
   }
+  static boolean last_r = LOW;
+  boolean r = !digitalRead(7);
+  if (r && !last_r) {
+    last_r = r;
+    Serial.println(-RA_Stepper.getSteps());
+    Serial.println(-DEC_Stepper.getSteps());
+    RA_Stepper.move(-RA_Stepper.getSteps());
+    DEC_Stepper.move(-DEC_Stepper.getSteps());
+    delay(100);
+  } else {
+    last_r = LOW;
+  }
   
   if (RA_Stepper.actionImminent()) RA_Stepper.nextAction();
   if (DEC_Stepper.actionImminent()) DEC_Stepper.nextAction();
