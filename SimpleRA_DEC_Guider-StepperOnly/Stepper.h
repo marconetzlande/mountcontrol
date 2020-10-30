@@ -240,8 +240,9 @@ class StepperDriver {
   
         // TODO: Minimal akzeptables stepper_interval befor Mode-Switch berechnen! Das hängt von dem Modus ab, in dem wir uns bereits befinden. 
         // Theoretisch müsste der Strom am Motor abhängig von der Geschwindigkeit immer weiter erhöhrt werden, um höhere Geschwindigkeiten zu erreichen.
-        stepper_interval = 1000000 * (RA_MICROSTEPS/mode) / stepper_freqency;
-        calcuateMode(stepper_freqency);
+        calcuateMode((float)1000000/stepper_freqency);
+        //calcuateMode(stepper_freqency);
+        stepper_interval = 1000000UL * (RA_MICROSTEPS/mode) / stepper_freqency;
         Serial.print(stepper_freqency);
         Serial.print(';');
         Serial.println(stepper_interval);
