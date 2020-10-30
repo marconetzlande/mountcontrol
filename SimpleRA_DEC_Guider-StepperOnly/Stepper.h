@@ -207,23 +207,28 @@ class StepperDriver {
           digitalWrite(dir_pin, dir);
           enabled = true;
         }
-        
-        if (dir) {steps += RA_MICROSTEPS/mode;} else {steps -= RA_MICROSTEPS/mode;};
-        steps_remaining -= RA_MICROSTEPS/mode;
-        
+       
         delayMicros(next_action_interval, last_action_end);
         digitalWrite(step_pin, HIGH);
         unsigned m = micros();
-        
-        unsigned long pulse = stepper_interval;
+
+        if (dir) {steps += RA_MICROSTEPS/mode;} else {steps -= RA_MICROSTEPS/mode;};
+        steps_remaining -= RA_MICROSTEPS/mode;
+
+        unsigned long last_stepper_interval = stepper_interval;
         // TODO: Die Geschwindigkeit muss abhängig von der Zeit verändert werdcen. Nicht abhängig
         // von den Steps. Oder es muss beücksichtigt werden, dass die Zeit zwischen den Steps sich verändert.
-        unsigned long deltaf = (RA_ACCELERATION * stepper_freqency / (1000000 * (RA_MICROSTEPS/mode)));
-        if (deltaf <1 ) deltaf = 1;
-        if (!slowdown) {
-          stepper_freqency = stepper_freqency + deltaf;
-        } else {
-          stepper_freqency = stepper_freqency - deltaf;
+        if (accellerate xor slowdown) {
+          static long modulo = 0;
+          unsigned long deltaf = (RA_ACCELERATION * stepper_freqency / (1000000UL * (RA_MICROSTEPS/mode)));
+          modulo = (RA_ACCELERATION * stepper_freqency) % (1000000UL * (RA_MICROSTEPS/mode));
+          Serial.println(modulo);
+          if (deltaf <1 ) deltaf = 1;
+          if (accellerate) {
+            stepper_freqency = stepper_freqency + deltaf;
+          } else if (slowdown) {
+            stepper_freqency = stepper_freqency - deltaf;
+          }
         }
   
         if (stepper_freqency > RA_MAX_FREQUENCY) stepper_freqency = RA_MAX_FREQUENCY;
@@ -246,7 +251,7 @@ class StepperDriver {
         
         last_action_end = micros();
         m = last_action_end - m;
-        next_action_interval = (pulse > m) ? pulse - m : 1;
+        next_action_interval = (last_stepper_interval > m) ? last_stepper_interval - m : 1;
         //return next_action_interval;
         return stepper_interval;
       }
