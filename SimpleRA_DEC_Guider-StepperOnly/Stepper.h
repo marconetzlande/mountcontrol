@@ -232,7 +232,7 @@ class StepperDriver {
         Serial.print(';');
         Serial.println(stepper_interval);
         
-        delayMicros(2);
+        delayMicros(2,m);
         digitalWrite(step_pin, LOW);
         
         last_action_end = micros();
