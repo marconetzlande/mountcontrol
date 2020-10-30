@@ -22,9 +22,9 @@
 //#define Wire                 2
 //#define Wire                 3
 
-#define RA_DRIVER_MAX_FREQUENCY       640UL
+#define RA_DRIVER_MAX_FREQUENCY      3200UL
 #define RA_MAX_FREQUENCY            32000UL
-#define RA_ACCELERATION               256UL
+#define RA_ACCELERATION              1024UL
 #define RA_MICROSTEPS                  32UL
 
 #define DEC_DRIVER_MAX_FREQUENCY      400UL
