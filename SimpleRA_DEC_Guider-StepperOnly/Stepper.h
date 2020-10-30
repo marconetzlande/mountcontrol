@@ -243,10 +243,11 @@ class StepperDriver {
         calcuateMode((float)1000000/stepper_freqency);
         //calcuateMode(stepper_freqency);
         stepper_interval = 1000000UL * (RA_MICROSTEPS/mode) / stepper_freqency;
+        /*
         Serial.print(stepper_freqency);
         Serial.print(';');
         Serial.println(stepper_interval);
-        
+        */
         delayMicros(2,m);
         digitalWrite(step_pin, LOW);
         
