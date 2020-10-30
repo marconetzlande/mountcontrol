@@ -228,6 +228,9 @@ class StepperDriver {
         // Theoretisch müsste der Strom am Motor abhängig von der Geschwindigkeit immer weiter erhöhrt werden, um höhere Geschwindigkeiten zu erreichen.
         stepper_interval = 1000000 * (RA_MICROSTEPS/mode) / stepper_freqency;
         calcuateMode(stepper_freqency);
+        Serial.print(stepper_freqency);
+        Serial.print(';');
+        Serial.println(stepper_interval);
         
         delayMicros(2);
         digitalWrite(step_pin, LOW);

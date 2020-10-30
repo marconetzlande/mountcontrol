@@ -8,10 +8,6 @@
 #define RA_PLUS             A1
 #define RA_MINUS            A3
 
-#define RA_DRIVER_MAX_FREQUENCY     4800UL
-#define RA_MAX_FREQUENCY           32000UL
-#define RA_ACCELERATION              256UL
-
 #define DEC_STEPPER_DIR      6
 #define DEC_STEPPER_STEP     8
 #define DEC_STEPPER_ENABLE   9
@@ -21,18 +17,20 @@
 #define DEC_PLUS            A0
 #define DEC_MINUS           A2
 
-#define DEC_DRIVER_MAX_FREQUENCY     4800UL
-#define DEC_MAX_FREQUENCY           16000UL
-#define DEC_ACCELERATION              256UL
-
 #define LED1                13
 #define RTC_SQW              7
 //#define Wire                 2
 //#define Wire                 3
 
-//microstepping
-#define DEC_MICROSTEPS      32L
-#define RA_MICROSTEPS       32L
+#define RA_DRIVER_MAX_FREQUENCY       640UL
+#define RA_MAX_FREQUENCY            32000UL
+#define RA_ACCELERATION               256UL
+#define RA_MICROSTEPS                  32UL
+
+#define DEC_DRIVER_MAX_FREQUENCY      400UL
+#define DEC_MAX_FREQUENCY           32000UL
+#define DEC_ACCELERATION              256UL
+#define DEC_MICROSTEPS                 32UL
 
 //messung:
 //360° = 3.308.864 steps
