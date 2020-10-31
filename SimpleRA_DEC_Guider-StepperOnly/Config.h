@@ -21,6 +21,7 @@
 #define RTC_SQW              7
 //#define Wire                 2
 //#define Wire                 3
+#define VOLTAGE_PIN         A5
 
 #define RA_DRIVER_MAX_FREQUENCY      3200UL
 #define RA_MAX_FREQUENCY             6400UL

@@ -102,6 +102,12 @@ void loop () {
           Serial.println(DEC_Stepper.getSteps());
           delay(250);
         break;
+        case 'V':
+          //+12v---330kΩ---+---100kΩ---GND
+          //2.79V at 12v input.
+          Serial.println((float)analogRead(VOLTAGE_PIN)/1023*21.5);
+          delay(250);
+        break;
         case 'X':
           Serial.println("Stopping everything");
           delay(250);
