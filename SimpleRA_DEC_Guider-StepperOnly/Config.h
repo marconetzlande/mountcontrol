@@ -3,8 +3,8 @@
 #define RA_STEPPER_STEP     10
 #define RA_STEPPER_ENABLE   11
 #define RA_STEPPER_MODE0     4
-#define RA_STEPPER_MODE1    A4
-#define RA_STEPPER_MODE2    A5
+#define RA_STEPPER_MODE1    16
+#define RA_STEPPER_MODE2    13
 #define RA_PLUS             A1
 #define RA_MINUS            A3
 
@@ -19,8 +19,8 @@
 
 #define LED1                13
 #define RTC_SQW              7
-//#define Wire                 2
-//#define Wire                 3
+#define WireSDA              2
+#define WireSLC              3
 #define VOLTAGE_PIN         A5
 
 #define RA_DRIVER_MAX_FREQUENCY      3200UL
@@ -34,7 +34,8 @@
 #define DEC_MICROSTEPS                 32UL
 
 //messung:
-//360° = 3.308.864 steps
+//RA: 360° = 3.308.800 steps / 6400 = 517 fullsteps
+//DEV: 360° = 2.112.000 steps / 6400 = 330 fullsteps
 //1 step = 0,00010879866927138740063054873213284 ° = 0,39167520937699464226997543567823″
 //1 step = 0,02611168062513297615133169571188s = 38,297037037037037037037037037037Hz
 //858,44761223187172395118082822383 oszillation per step
