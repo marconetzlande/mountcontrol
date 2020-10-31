@@ -80,6 +80,71 @@ void loop () {
             DEC_Stepper.move(d);
           }
         break;
+        case 'F': if (true) {
+            volatile String s;
+            volatile float fsteps;
+            volatile byte b;
+            s = Serial.readStringUntil('h');
+            b = s.toInt();
+            fsteps = (float)RA_STEPS / 24.0 * b;
+            s = Serial.readStringUntil('m');
+            b = s.toInt();
+            fsteps += (float)RA_STEPS / 1440.0 * b;
+            s = Serial.readStringUntil('.');
+            b = s.toInt();
+            fsteps += (float)RA_STEPS / 86400.0 * b;
+            s = Serial.readStringUntil('s');
+            b = s.toInt();
+            fsteps += (float)RA_STEPS / 8640000.0 * b;
+            long ra_steps = fsteps;
+            ra_steps -= ra_steps % 32;
+            
+            Serial.readStringUntil('/');
+            b = Serial.peek();
+            if (b == char('-') || b == char('+')) {
+              Serial.read();
+            }
+            boolean negative = (b == char('-'));
+            s = Serial.readStringUntil('g');
+            b = s.toInt();
+            fsteps = (float)DEC_STEPS / 360 * b;
+            s = Serial.readStringUntil('\'');
+            b = s.toInt();
+            fsteps -= (float)DEC_STEPS / 360 / 60 * b;
+            s = Serial.readStringUntil('.');
+            b = s.toInt();
+            fsteps -= (float)DEC_STEPS / 360 / 60 / 60 * b;
+            s = Serial.readStringUntil('"');
+            b = s.toInt();
+            fsteps -= (float)DEC_STEPS / 360 / 60 / 60 / 10 * b;
+            long dec_steps = fsteps;
+            dec_steps -= dec_steps % 32;
+            if (negative) dec_steps = -dec_steps;
+            dec_steps = DEC_STEPS/4 - dec_steps;
+
+            Serial.println("--------");
+            
+            //Serial.println(ra_steps);
+            //Serial.println(dec_steps);
+
+            if (ra_steps * 2 > RA_STEPS) if ((ra_steps - RA_STEPS/2)*4 < RA_STEPS) ra_steps = ra_steps - RA_STEPS/2;
+            if (ra_steps * 4 > RA_STEPS) ra_steps = RA_STEPS - ra_steps;
+
+            //if (dec_steps > DEC_STEPS) dec_steps -= DEC_STEPS;
+
+            Serial.println(ra_steps-RA_Stepper.getSteps());
+            Serial.println(dec_steps-DEC_Stepper.getSteps());
+
+            if (abs(ra_steps)*4>RA_STEPS) {
+              Serial.println("RA out of range");
+            } else if (abs(dec_steps)>DEC_STEPS) {
+              Serial.println("DEC out of range");
+            } else {
+              RA_Stepper.move(ra_steps-RA_Stepper.getSteps());
+              DEC_Stepper.move(dec_steps-DEC_Stepper.getSteps());
+            }
+        }
+        break;
         case 'Z':
           Serial.println("Going to home position");
           Serial.println(-RA_Stepper.getSteps());

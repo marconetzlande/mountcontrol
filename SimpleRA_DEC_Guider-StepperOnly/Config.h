@@ -33,6 +33,9 @@
 #define DEC_ACCELERATION              256UL
 #define DEC_MICROSTEPS                 32UL
 
+#define RA_STEPS                  3308800UL
+#define DEC_STEPS                 2112000UL
+
 //messung:
 //RA: 360° = 3.308.800 steps / 6400 = 517 fullsteps
 //DEC: 360° = 2.112.000 steps / 6400 = 330 fullsteps
