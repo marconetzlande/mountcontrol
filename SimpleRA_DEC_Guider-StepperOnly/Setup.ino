@@ -14,6 +14,6 @@ void setupStepper()
 }
 
 void setup () {
-  Serial.begin(57600);
+  Serial.begin(115200);
   setupStepper();
 }
