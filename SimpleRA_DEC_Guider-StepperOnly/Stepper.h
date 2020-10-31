@@ -33,8 +33,10 @@ class StepperDriver {
       boolean dir = false;
       short mode;
       short current_mode;
+      unsigned long steps_accelerate;
+      unsigned long steps_decelerate;
       boolean slowdown = false;
-      boolean accellerate = false;
+      boolean accelerate = false;
       boolean gotomode = false;
     
   protected:
@@ -66,7 +68,7 @@ class StepperDriver {
     }
 
     boolean StepperDriver::actionImminent() {
-      return ((accellerate || slowdown || gotomode) && (delayRemaining()<25));
+      return ((accelerate || slowdown || gotomode) && (delayRemaining()<25));
     }
 
     unsigned long StepperDriver::delayRemaining() {
@@ -91,13 +93,13 @@ class StepperDriver {
     }
 
     void StepperDriver::speedup() {
-      accellerate = true;
+      accelerate = true;
       slowdown = false;
     }
     
     boolean StepperDriver::breaks() {
       if (stepper_freqency > RA_MICROSTEPS) {
-        accellerate = false;
+        accelerate = false;
         slowdown = true;
       }
       return (stepper_freqency == 0);
@@ -171,6 +173,10 @@ class StepperDriver {
       if (s!=0)
       if (steps_to_go == 0) {
         dir = (s>=0);
+        steps_accelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / RA_ACCELERATION;
+        if (steps_accelerate*2 > s) steps_accelerate = s/2;
+        steps_decelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / RA_ACCELERATION;
+        if (steps_decelerate*2 > s) steps_decelerate = s/2;
         steps_to_go = s;
         steps_remaining = abs(s);
         gotomode = true;
@@ -181,11 +187,14 @@ class StepperDriver {
       if (steps_remaining > 0) {
         if (gotomode) {
           //nach der hälfte der steps abbremsen
-          if (steps_remaining*2 < abs(steps_to_go)) {
-            accellerate = false;
-            slowdown = true;
+          if ((abs(steps_to_go) - steps_remaining) < steps_accelerate) {
+            accelerate = true;
+            slowdown = false;
+          } else if (steps_remaining < steps_decelerate) {
+            accelerate = true;
+            slowdown = false;
           } else {
-            accellerate = true;
+            accelerate = false;
             slowdown = false;
           }
         }
@@ -195,11 +204,11 @@ class StepperDriver {
           steps_to_go = 0;
           gotomode = false;
           slowdown = false;
-          accellerate = false;
+          accelerate = false;
         }
       }
 
-      if (accellerate || slowdown || gotomode) {
+      if (accelerate || slowdown || gotomode) {
         configureMode();
     
         if (!enabled) {
@@ -218,13 +227,10 @@ class StepperDriver {
         unsigned long last_stepper_interval = stepper_interval;
         // TODO: Die Geschwindigkeit muss abhängig von der Zeit verändert werdcen. Nicht abhängig
         // von den Steps. Oder es muss beücksichtigt werden, dass die Zeit zwischen den Steps sich verändert.
-        if (accellerate xor slowdown) {
-          static long modulo = 0;
+        if (accelerate xor slowdown) {
           unsigned long deltaf = (RA_ACCELERATION * stepper_freqency / (1000000UL * (RA_MICROSTEPS/mode)));
-          modulo = (RA_ACCELERATION * stepper_freqency) % (1000000UL * (RA_MICROSTEPS/mode));
-          Serial.println(modulo);
           if (deltaf <1 ) deltaf = 1;
-          if (accellerate) {
+          if (accelerate) {
             stepper_freqency = stepper_freqency + deltaf;
           } else if (slowdown) {
             stepper_freqency = stepper_freqency - deltaf;
