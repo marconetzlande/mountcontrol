@@ -3,10 +3,10 @@
 #define RA_STEPPER_STEP     10
 #define RA_STEPPER_ENABLE   11
 #define RA_STEPPER_MODE0     4
-#define RA_STEPPER_MODE1    16
-#define RA_STEPPER_MODE2    13
-#define RA_PLUS             A1
-#define RA_MINUS            A3
+#define RA_STEPPER_MODE1    22
+#define RA_STEPPER_MODE2    16
+#define RA_PLUS             19
+#define RA_MINUS            21
 
 #define DEC_STEPPER_DIR      6
 #define DEC_STEPPER_STEP     8
@@ -14,14 +14,14 @@
 #define DEC_STEPPER_MODE0    5
 #define DEC_STEPPER_MODE1   14
 #define DEC_STEPPER_MODE2   15
-#define DEC_PLUS            A0
-#define DEC_MINUS           A2
+#define DEC_PLUS            18
+#define DEC_MINUS           20
 
 #define LED1                13
 #define RTC_SQW              7
 #define WireSDA              2
 #define WireSLC              3
-#define VOLTAGE_PIN         A5
+#define VOLTAGE_PIN         23 // A5
 
 #define RA_DRIVER_MAX_FREQUENCY      3200UL
 #define RA_MAX_FREQUENCY             6400UL
