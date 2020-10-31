@@ -2,6 +2,8 @@ void setupStepper()
 {
   RA_Stepper.setup();
   DEC_Stepper.setup();
+
+  pinMode(VOLTAGE_PIN, INPUT);
   
   pinMode(RA_PLUS, INPUT_PULLUP);
   pinMode(RA_MINUS, INPUT_PULLUP);
