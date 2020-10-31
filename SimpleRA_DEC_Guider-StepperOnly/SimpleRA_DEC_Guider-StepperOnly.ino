@@ -170,7 +170,7 @@ void loop () {
         case 'V':
           //+12v---330kΩ---+---100kΩ---GND
           //2.79V at 12v input.
-          Serial.println((float)analogRead(VOLTAGE_PIN)/1023*21.5);
+          Serial.println((float)analogRead(VOLTAGE_PIN)/1023*20.65);
           delay(250);
         break;
         case 'X':
