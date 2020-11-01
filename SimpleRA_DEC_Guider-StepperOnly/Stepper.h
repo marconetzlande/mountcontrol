@@ -105,11 +105,11 @@ class StepperDriver {
       return (stepper_freqency == 0);
     }
 
-    byte StepperDriver::calcuateMode(float p) {
-      #define MIN_P 10
+    byte StepperDriver::calculateMode(float p) {
+      #define MIN_P 250
       byte modes[] = {32,16,8,4,2,1}; //depending on microstepping, we choose 32
       byte n=0;
-      while ((p / modes[n]) < MIN_P) n++;
+      while ((p * mode / modes[n]) < MIN_P) n++;
       mode = modes[n];
       return modes[n];
     }
