@@ -182,6 +182,7 @@ class StepperDriver {
         if (steps_decelerate*2 > s) steps_decelerate = s/2;
         steps_to_go = s;
         steps_remaining = abs(s);
+        steps_done = 0;
         gotomode = true;
       }
     }
@@ -190,10 +191,10 @@ class StepperDriver {
       if (steps_remaining > 0) {
         if (gotomode) {
           //nach der hälfte der steps abbremsen
-          if ((abs(steps_to_go) - steps_remaining) < steps_accelerate) {
+          if (steps_done < steps_remaining) {
             accelerate = true;
             slowdown = false;
-          } else if (steps_remaining < steps_decelerate) {
+          } else if (steps_done > steps_remaining) {
             accelerate = false;
             slowdown = true;
           } else {
@@ -226,6 +227,7 @@ class StepperDriver {
 
         if (dir) {steps += RA_MICROSTEPS/mode;} else {steps -= RA_MICROSTEPS/mode;};
         steps_remaining -= RA_MICROSTEPS/mode;
+        steps_done += RA_MICROSTEPS/mode;
 
         unsigned long last_stepper_interval = stepper_interval;
         // TODO: Die Geschwindigkeit muss abhängig von der Zeit verändert werdcen. Nicht abhängig
