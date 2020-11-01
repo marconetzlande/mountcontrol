@@ -173,9 +173,12 @@ class StepperDriver {
       if (s!=0)
       if (steps_to_go == 0) {
         dir = (s>=0);
-        steps_accelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / RA_ACCELERATION;
+        //s = 0,5 * a * t*t
+        //s = 0,5 * (v²/a)
+        //t = sqrt(2 * s /a)
+        steps_accelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / (2 * RA_ACCELERATION);
         if (steps_accelerate*2 > s) steps_accelerate = s/2;
-        steps_decelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / RA_ACCELERATION;
+        steps_decelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / (2 * RA_ACCELERATION);
         if (steps_decelerate*2 > s) steps_decelerate = s/2;
         steps_to_go = s;
         steps_remaining = abs(s);
