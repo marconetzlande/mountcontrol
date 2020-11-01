@@ -28,6 +28,7 @@ class StepperDriver {
       long steps = 0;
       long steps_to_go = 0;
       long steps_remaining = 0;
+      long steps_done = 0;
       
       boolean enabled = false;
       boolean dir = false;
@@ -114,7 +115,7 @@ class StepperDriver {
       return modes[n];
     }
 
-    short StepperDriver::calcuateMode(unsigned long f) {
+    short StepperDriver::calculateMode(unsigned long f) {
       if (f <= RA_DRIVER_MAX_FREQUENCY) {
         mode=32;
       } else if ((f > (RA_DRIVER_MAX_FREQUENCY       )) && ((f <= RA_DRIVER_MAX_FREQUENCY *  2UL))) {
@@ -233,30 +234,45 @@ class StepperDriver {
         // TODO: Die Geschwindigkeit muss abhängig von der Zeit verändert werdcen. Nicht abhängig
         // von den Steps. Oder es muss beücksichtigt werden, dass die Zeit zwischen den Steps sich verändert.
         if (accelerate xor slowdown) {
+          //V = A * T; V = deltaS/deltaT; T=sqrt(S*2/A)
+          //deltaT = deltaS / (A * T);
+          //sqrt(RA_ACCELERATION * (abs(steps_to_go) - steps_remaining)*(abs(steps_to_go) - steps_remaining)) = (RA_MICROSTEPS/mode)/stepper_interval
+
           unsigned long deltaf = (RA_ACCELERATION * stepper_freqency / (1000000UL * (RA_MICROSTEPS/mode)));
           if (deltaf <1 ) deltaf = 1;
           if (accelerate) {
-            stepper_freqency = stepper_freqency + deltaf;
+            if (!gotomode) {
+              stepper_freqency = stepper_freqency + deltaf;
+              stepper_interval = 1000000UL * (RA_MICROSTEPS/mode) / stepper_freqency;
+            } else {
+              stepper_freqency = sqrt(2 * (steps_done+1) * RA_ACCELERATION * (RA_MICROSTEPS/mode) * (RA_MICROSTEPS/mode));
+              stepper_interval = 1000000UL / stepper_freqency;
+            }            
           } else if (slowdown) {
-            stepper_freqency = stepper_freqency - deltaf;
+            if (!gotomode) {
+              stepper_freqency = stepper_freqency - deltaf;
+              stepper_interval = 1000000UL * (RA_MICROSTEPS/mode) / stepper_freqency;
+            } else{
+              stepper_freqency = sqrt(2 * (steps_remaining-1) * RA_ACCELERATION * (RA_MICROSTEPS/mode) * (RA_MICROSTEPS/mode));
+              stepper_interval = 1000000UL / stepper_freqency;
+            }
           }
         }
-  
-        if (stepper_freqency > RA_MAX_FREQUENCY) stepper_freqency = RA_MAX_FREQUENCY;
-        if (stepper_freqency < RA_MICROSTEPS) stepper_freqency = RA_MICROSTEPS;
-        if (slowdown &&  stepper_freqency == RA_MICROSTEPS && (steps % RA_MICROSTEPS == 0)) {
+        
+        if (!gotomode) {
+          if (stepper_freqency > RA_MAX_FREQUENCY) stepper_freqency = RA_MAX_FREQUENCY;
+          if (stepper_freqency < RA_MICROSTEPS) stepper_freqency = RA_MICROSTEPS;
+          if (slowdown &&  stepper_freqency == RA_MICROSTEPS && (steps % RA_MICROSTEPS == 0)) {
+            slowdown = false;
+            stepper_freqency = 0;
+          }
+        }
+        if (gotomode && steps_remaining<=0) {
           slowdown = false;
           stepper_freqency = 0;
+          stepper_interval = 0;
         }
-  
-        calcuateMode((float)1000000/stepper_freqency);
-        //calcuateMode(stepper_freqency);
-        stepper_interval = 1000000UL * (RA_MICROSTEPS/mode) / stepper_freqency;
-        /*
-        Serial.print(stepper_freqency);
-        Serial.print(';');
-        Serial.println(stepper_interval);
-        */
+        calculateMode((float)stepper_interval);
         delayMicros(2,m);
         digitalWrite(step_pin, LOW);
         
