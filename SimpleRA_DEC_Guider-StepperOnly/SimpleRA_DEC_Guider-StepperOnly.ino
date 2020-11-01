@@ -50,6 +50,93 @@ void loop () {
   if (Serial.available() > 0) {
       char command = Serial.read();
       switch (command) {
+        case '\6':
+          Serial.print('P');
+        break;
+        case '#': if (true) {
+            char serialdata[30]; 
+            int i=0;
+            delay(5);
+            while((serialdata[i++]=Serial.read())!='#'){ delay(5); }
+            serialdata[i]='\0';
+            
+            if (serialdata[0]==':' && serialdata[1]=='G' && serialdata[2]=='R' && serialdata[3]=='#') {
+              char s[9];
+              float ra = abs(RA_Stepper.getSteps());
+              byte hh = ( ra / (float)RA_STEPS * 24.0);
+              byte mm = ( ra / (float)RA_STEPS * 24 - hh) * 60.0;
+              byte ss = ((ra / (float)RA_STEPS * 24 - hh) * 60.0 - mm ) * 60.0;
+              sprintf(s, "%02d:%02d:%02d#", int(hh), int(mm), int(ss));
+              Serial.print(s);
+            } else if (serialdata[0]==':' && serialdata[1]=='G' && serialdata[2]=='D' && serialdata[3]=='#') {
+              char s[10];
+              float dec = abs(DEC_Stepper.getSteps() + DEC_STEPS/4);
+              byte hh = ( dec / (float)DEC_STEPS * 360.0);
+              byte mm = ( dec / (float)DEC_STEPS * 360 - hh) * 60.0;
+              byte ss = ((dec / (float)DEC_STEPS * 360 - hh) * 60.0 - mm ) * 60.0;
+              sprintf(s, "%+03d*%02d:%02d#", int(hh), int(mm), int(ss));
+              Serial.print(s);
+            } else if (serialdata[0]==':' && serialdata[1]=='Q' && serialdata[2]=='#') {
+              // Halt all current slewing Returns:Nothing
+            } else {
+              Serial.print('\15');
+            }
+          }
+        break;
+        case ':': if (true) {
+            char serialdata[30]; 
+            int i=0;
+            delay(5);
+            while((serialdata[i++]=Serial.read())!='#'){ delay(5); }
+            serialdata[i]='\0';
+            
+            if (serialdata[0]=='S' && serialdata[1]=='r') {
+              //:Sr04:32:50#
+              byte hh = atoi(serialdata+2);
+              byte mm = atoi(serialdata+5);
+              byte ss = atoi(serialdata+10);
+              volatile float fsteps;
+              fsteps = (float)RA_STEPS / 24.0 * hh;
+              fsteps += (float)RA_STEPS / 1440.0 * mm;
+              fsteps += (float)RA_STEPS / 86400.0 * ss;
+              //fsteps += (float)RA_STEPS / 8640000.0 * mss;
+              long ra_steps = fsteps;
+              ra_steps -= ra_steps % 32;
+              if (ra_steps * 2 > RA_STEPS) if ((ra_steps - RA_STEPS/2)*4 < RA_STEPS) ra_steps = ra_steps - RA_STEPS/2;
+              if (ra_steps * 4 > RA_STEPS) ra_steps = RA_STEPS - ra_steps;
+              RA_Stepper.move(ra_steps-RA_Stepper.getSteps());
+              
+              Serial.print('1');
+            } else if (serialdata[0]=='S' && serialdata[1]=='d' && serialdata[5]=='*' && serialdata[8]==':' && serialdata[11]=='#') {
+              //:Sd-28*43:54#
+              boolean negative = (serialdata[2] == '-');
+              byte hh = atoi(serialdata+3);
+              byte mm = atoi(serialdata+6);
+              byte ss = atoi(serialdata+9);
+              volatile float fsteps;
+              fsteps = (float)DEC_STEPS / 360 * hh;
+              fsteps -= (float)DEC_STEPS / 360 / 60 * mm;
+              fsteps -= (float)DEC_STEPS / 360 / 60 / 60 * ss;
+              //fsteps -= (float)DEC_STEPS / 360 / 60 / 60 / 10 * mss;
+              long dec_steps = fsteps;
+              dec_steps -= dec_steps % 32;
+              dec_steps = DEC_STEPS/4 - dec_steps;
+              if (negative) dec_steps = -dec_steps;
+              float ra_steps = 1;
+              if (dec_steps > 0 && ra_steps > 0) dec_steps = -dec_steps;
+              //DEC_Stepper.move(dec_steps-DEC_Stepper.getSteps());
+              Serial.print('1');
+            } else if (serialdata[0]=='M' && serialdata[1]=='S') {
+              //:MS# Slew to Target Object 
+              //Returns: 0 Slew is Possible 
+              //         1<string># Object Below Horizon w/string message 
+              //         2<string># Object Below Higher w/string message 
+              Serial.print('0');
+            } else {
+              Serial.print('\15');
+            }
+          }
+        break;
         /*
         case 'G':
           Serial.println("Starting RA guider");
@@ -130,8 +217,9 @@ void loop () {
             if (ra_steps * 2 > RA_STEPS) if ((ra_steps - RA_STEPS/2)*4 < RA_STEPS) ra_steps = ra_steps - RA_STEPS/2;
             if (ra_steps * 4 > RA_STEPS) ra_steps = RA_STEPS - ra_steps;
 
-            //if (dec_steps > DEC_STEPS) dec_steps -= DEC_STEPS;
-
+            if (dec_steps > 0 && ra_steps > 0) dec_steps = -dec_steps;
+            
+            // TODO: find shotest path.
             Serial.println(ra_steps-RA_Stepper.getSteps());
             Serial.println(dec_steps-DEC_Stepper.getSteps());
 
@@ -178,6 +266,6 @@ void loop () {
           delay(250);
         break;
       }
-      while (Serial.available()) Serial.read();
+      //while (Serial.available()) Serial.read();
    }
 }
