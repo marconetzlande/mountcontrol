@@ -90,7 +90,7 @@ void loop () {
             while((serialdata[i++]=Serial.read())!='#'){ delay(5); }
             serialdata[i]='\0';
             
-            if (serialdata[0]=='S' && serialdata[1]=='r') {
+            if (serialdata[0]=='S' && serialdata[1]=='r' && serialdata[4]==':' && serialdata[7]==':' && serialdata[10]=='#') {
               //:Sr04:32:50#
               byte hh = atoi(serialdata+2);
               byte mm = atoi(serialdata+5);
@@ -104,9 +104,13 @@ void loop () {
               ra_steps -= ra_steps % 32;
               if (ra_steps * 2 > RA_STEPS) if ((ra_steps - RA_STEPS/2)*4 < RA_STEPS) ra_steps = ra_steps - RA_STEPS/2;
               if (ra_steps * 4 > RA_STEPS) ra_steps = RA_STEPS - ra_steps;
-              RA_Stepper.move(ra_steps-RA_Stepper.getSteps());
-              
-              Serial.print('1');
+              Serial.print(ra_steps);
+              if (abs(ra_steps)*4>RA_STEPS) {
+                Serial.print('0');
+              } else {
+                Serial.print('1');
+                RA_Stepper.move(ra_steps-RA_Stepper.getSteps());
+              }
             } else if (serialdata[0]=='S' && serialdata[1]=='d' && serialdata[5]=='*' && serialdata[8]==':' && serialdata[11]=='#') {
               //:Sd-28*43:54#
               boolean negative = (serialdata[2] == '-');
@@ -124,8 +128,12 @@ void loop () {
               if (negative) dec_steps = -dec_steps;
               float ra_steps = 1;
               if (dec_steps > 0 && ra_steps > 0) dec_steps = -dec_steps;
-              //DEC_Stepper.move(dec_steps-DEC_Stepper.getSteps());
-              Serial.print('1');
+              if (abs(dec_steps)>DEC_STEPS) {
+                Serial.print('0');
+              } else {
+                Serial.print('1');
+                //DEC_Stepper.move(dec_steps-DEC_Stepper.getSteps());
+              }
             } else if (serialdata[0]=='M' && serialdata[1]=='S') {
               //:MS# Slew to Target Object 
               //Returns: 0 Slew is Possible 
@@ -266,6 +274,6 @@ void loop () {
           delay(250);
         break;
       }
-      //while (Serial.available()) Serial.read();
+      if (Serial.peek() != ':' && Serial.peek() != '#' ) while (Serial.available()) Serial.read();
    }
 }
