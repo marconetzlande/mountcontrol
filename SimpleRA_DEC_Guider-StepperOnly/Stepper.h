@@ -191,8 +191,8 @@ class StepperDriver {
             accelerate = true;
             slowdown = false;
           } else if (steps_remaining < steps_decelerate) {
-            accelerate = true;
-            slowdown = false;
+            accelerate = false;
+            slowdown = true;
           } else {
             accelerate = false;
             slowdown = false;
