@@ -91,7 +91,7 @@ void loop () {
             serialdata[i]='\0';
             
             if (serialdata[0]=='S' && serialdata[1]=='r' && serialdata[4]==':' && serialdata[7]==':' && serialdata[10]=='#') {
-              //:Sr04:32:50#
+              //:Sr01:00:00#
               byte hh = atoi(serialdata+2);
               byte mm = atoi(serialdata+5);
               byte ss = atoi(serialdata+10);
@@ -112,7 +112,7 @@ void loop () {
                 RA_Stepper.move(ra_steps-RA_Stepper.getSteps());
               }
             } else if (serialdata[0]=='S' && serialdata[1]=='d' && serialdata[5]=='*' && serialdata[8]==':' && serialdata[11]=='#') {
-              //:Sd-28*43:54#
+              //:Sd89*00:00#
               boolean negative = (serialdata[2] == '-');
               byte hh = atoi(serialdata+3);
               byte mm = atoi(serialdata+6);
