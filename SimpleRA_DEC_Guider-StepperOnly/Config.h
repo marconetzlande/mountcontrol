@@ -24,8 +24,8 @@
 #define VOLTAGE_PIN         23 // A5
 
 #define RA_DRIVER_MAX_FREQUENCY      3200UL
-#define RA_MAX_FREQUENCY             6400UL
-#define RA_ACCELERATION              1024UL
+#define RA_MAX_FREQUENCY            12800UL
+#define RA_ACCELERATION              2048UL
 #define RA_MICROSTEPS                  32UL
 
 #define DEC_DRIVER_MAX_FREQUENCY      400UL
