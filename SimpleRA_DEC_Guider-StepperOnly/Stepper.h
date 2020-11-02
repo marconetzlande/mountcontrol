@@ -22,7 +22,7 @@ class StepperDriver {
   private:
       unsigned long last_action_end = 0;
       unsigned long next_action_interval = 0;
-      unsigned long stepper_freqency = 0;
+      float stepper_freqency = 0;
       unsigned long stepper_interval = 0;
       
       long steps = 0;
@@ -108,33 +108,16 @@ class StepperDriver {
 
     byte StepperDriver::calculateMode(float p) {
       #define MIN_P 250
-      byte modes[] = {32,16,8,4,2,1}; //depending on microstepping, we choose 32
+      byte modes[] = {1,2,4,8,16,32}; //depending on microstepping, we choose 32
       byte n=0;
-      while ((p * mode / modes[n]) < MIN_P) n++;
+      while ((p * modes[n]) < MIN_P) n++;
       mode = modes[n];
       return modes[n];
     }
-
-    short StepperDriver::calculateMode(unsigned long f) {
-      if (f <= RA_DRIVER_MAX_FREQUENCY) {
-        mode=32;
-      } else if ((f > (RA_DRIVER_MAX_FREQUENCY       )) && ((f <= RA_DRIVER_MAX_FREQUENCY *  2UL))) {
-        mode=16;
-      } else if ((f > (RA_DRIVER_MAX_FREQUENCY *  2UL)) && ((f <= RA_DRIVER_MAX_FREQUENCY *  4UL))) {
-        mode=8;
-      } else if ((f > (RA_DRIVER_MAX_FREQUENCY *  4UL)) && ((f <= RA_DRIVER_MAX_FREQUENCY *  8UL))) {
-        mode=4;
-      } else if ((f > (RA_DRIVER_MAX_FREQUENCY *  8UL)) && ((f <= RA_DRIVER_MAX_FREQUENCY * 16UL))) {
-        mode=2;
-      } else if ((f > (RA_DRIVER_MAX_FREQUENCY * 16UL)) && ((f <= RA_DRIVER_MAX_FREQUENCY * 32UL))) {
-        mode=1;
-      }
-      return mode;
-    }
-
+    
     void StepperDriver::configureMode() {
       if (current_mode != mode) { 
-        switch (mode) {
+        switch (RA_MICROSTEPS/mode) {
           case 32: // 1/32 step
           digitalWrite(m0_pin, HIGH);
           digitalWrite(m1_pin, LOW);
@@ -178,9 +161,9 @@ class StepperDriver {
         //s = 0,5 * (v²/a)
         //t = sqrt(2 * s /a)
         steps_accelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / (2 * RA_ACCELERATION);
-        if (steps_accelerate*2 > s) steps_accelerate = s/2;
+        if (steps_accelerate*2 > abs(s)) steps_accelerate = abs(s/2);
         steps_decelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / (2 * RA_ACCELERATION);
-        if (steps_decelerate*2 > s) steps_decelerate = s/2;
+        if (steps_decelerate*2 > abs(s)) steps_decelerate = abs(s/2);
         steps_to_go = s;
         steps_remaining = abs(s);
         steps_done = 0;
@@ -192,10 +175,10 @@ class StepperDriver {
       if (steps_remaining > 0) {
         if (gotomode) {
           //nach der hälfte der steps abbremsen
-          if (steps_done < steps_remaining) {
+          if (steps_done <= steps_accelerate) {
             accelerate = true;
             slowdown = false;
-          } else if (steps_done > steps_remaining) {
+          } else if (steps_remaining <= steps_decelerate) {
             accelerate = false;
             slowdown = true;
           } else {
@@ -226,59 +209,51 @@ class StepperDriver {
         digitalWrite(step_pin, HIGH);
         unsigned m = micros();
 
-        if (dir) {steps += RA_MICROSTEPS/mode;} else {steps -= RA_MICROSTEPS/mode;};
-        steps_remaining -= RA_MICROSTEPS/mode;
-        steps_done += RA_MICROSTEPS/mode;
-
-        unsigned long last_stepper_interval = stepper_interval;
-        // TODO: Die Geschwindigkeit muss abhängig von der Zeit verändert werdcen. Nicht abhängig
-        // von den Steps. Oder es muss beücksichtigt werden, dass die Zeit zwischen den Steps sich verändert.
-        if (accelerate xor slowdown) {
-          //V = A * T; V = deltaS/deltaT; T=sqrt(S*2/A)
-          //deltaT = deltaS / (A * T);
-          //sqrt(RA_ACCELERATION * (abs(steps_to_go) - steps_remaining)*(abs(steps_to_go) - steps_remaining)) = (RA_MICROSTEPS/mode)/stepper_interval
-
-          unsigned long deltaf = (RA_ACCELERATION * stepper_freqency / (1000000UL * (RA_MICROSTEPS/mode)));
-          if (deltaf <1 ) deltaf = 1;
+        if (dir) {steps += mode;} else {steps -= mode;};
+        
+        steps_remaining -= mode;
+        steps_done += mode;
+        
+        if (accelerate xor slowdown) { 
+          //v = sqrt (2 * s * a)
           if (accelerate) {
             if (!gotomode) {
-              stepper_freqency = stepper_freqency + deltaf;
-              stepper_interval = 1000000UL * (RA_MICROSTEPS/mode) / stepper_freqency;
-            } else {
-              stepper_freqency = sqrt(2 * (steps_done+1) * RA_ACCELERATION * (RA_MICROSTEPS/mode) * (RA_MICROSTEPS/mode));
-              stepper_interval = 1000000UL / stepper_freqency;
-            }            
+              unsigned long steps_accelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / (2 * RA_ACCELERATION);
+              if (steps_done > steps_accelerate) steps_done = steps_accelerate;
+              steps_remaining = steps_done;
+            }
+            stepper_freqency = sqrt(2 * (steps_done) * RA_ACCELERATION);
           } else if (slowdown) {
+            stepper_freqency = sqrt(2 * (steps_remaining) * RA_ACCELERATION );
             if (!gotomode) {
-              stepper_freqency = stepper_freqency - deltaf;
-              stepper_interval = 1000000UL * (RA_MICROSTEPS/mode) / stepper_freqency;
-            } else{
-              stepper_freqency = sqrt(2 * (steps_remaining-1) * RA_ACCELERATION * (RA_MICROSTEPS/mode) * (RA_MICROSTEPS/mode));
-              stepper_interval = 1000000UL / stepper_freqency;
+              unsigned long steps_decelerate = RA_MAX_FREQUENCY * RA_MAX_FREQUENCY / (2 * RA_ACCELERATION);
+              if (steps_remaining > steps_decelerate) steps_remaining = steps_decelerate;
+              steps_done = steps_remaining;
             }
           }
         }
-        
-        if (!gotomode) {
-          if (stepper_freqency > RA_MAX_FREQUENCY) stepper_freqency = RA_MAX_FREQUENCY;
-          if (stepper_freqency < RA_MICROSTEPS) stepper_freqency = RA_MICROSTEPS;
-          if (slowdown &&  stepper_freqency == RA_MICROSTEPS && (steps % RA_MICROSTEPS == 0)) {
-            slowdown = false;
-            stepper_freqency = 0;
-          }
-        }
-        if (gotomode && steps_remaining<=0) {
+        if (stepper_freqency > RA_MAX_FREQUENCY) stepper_freqency = RA_MAX_FREQUENCY;
+        if (stepper_freqency < RA_MICROSTEPS) stepper_freqency = RA_MICROSTEPS;
+
+        calculateMode(1000000UL / stepper_freqency);
+        stepper_interval = 1000000UL * mode / stepper_freqency;
+
+        if (steps_remaining<=0) {
           slowdown = false;
+          accelerate = false;
+          gotomode = false;
           stepper_freqency = 0;
           stepper_interval = 0;
+          steps_done = 0;
+          steps_to_go = 0;
         }
-        calculateMode((float)stepper_interval);
+        
         delayMicros(2,m);
         digitalWrite(step_pin, LOW);
         
         last_action_end = micros();
         m = last_action_end - m;
-        next_action_interval = (last_stepper_interval > m) ? last_stepper_interval - m : 1;
+        next_action_interval = (stepper_interval > m) ? stepper_interval - m : 1;
         //return next_action_interval;
         return stepper_interval;
       }
