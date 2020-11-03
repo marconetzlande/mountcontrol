@@ -1,37 +1,43 @@
 //Pins
+//Stepper Driver DRV8825 for RA
 #define RA_STEPPER_DIR      12
 #define RA_STEPPER_STEP     10
 #define RA_STEPPER_ENABLE   11
 #define RA_STEPPER_MODE0     4
 #define RA_STEPPER_MODE1    22
 #define RA_STEPPER_MODE2    16
-#define RA_PLUS             19
-#define RA_MINUS            21
 
+//Stepper Driver DRV8825 for DEC
 #define DEC_STEPPER_DIR      6
 #define DEC_STEPPER_STEP     8
 #define DEC_STEPPER_ENABLE   9
 #define DEC_STEPPER_MODE0    5
 #define DEC_STEPPER_MODE1   14
 #define DEC_STEPPER_MODE2   15
+
+//Remote Control buttons
 #define DEC_PLUS            18
+#define RA_PLUS             19
 #define DEC_MINUS           20
+#define RA_MINUS            21
 
 #define LED1                13
-#define RTC_SQW              7
+//#define RTC_SQW              7
+#define GO_HOME_PIM          7
 #define WireSDA              2
 #define WireSLC              3
 #define VOLTAGE_PIN         23 // A5
 
-#define RA_DRIVER_MAX_FREQUENCY      3200UL
+#define MIN_P                           500 //minimum time between pulses in μs
+#define RA_MICROSTEPS                  32UL
 #define RA_MAX_FREQUENCY            12800UL
 #define RA_ACCELERATION              2048UL
-#define RA_MICROSTEPS                  32UL
 
-#define DEC_DRIVER_MAX_FREQUENCY      400UL
+/* currently not used
 #define DEC_MAX_FREQUENCY            6400UL
 #define DEC_ACCELERATION              256UL
 #define DEC_MICROSTEPS                 32UL
+*/
 
 #define RA_STEPS                  3308800UL
 #define DEC_STEPS                 2112000UL
