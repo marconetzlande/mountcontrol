@@ -31,17 +31,17 @@ void loop () {
     }
   }
   
-  static boolean last_r = LOW;
-  boolean r = !digitalRead(7);
-  if (r && !last_r) {
-    last_r = r;
+  static boolean last_go_home = LOW;
+  boolean go_home = !digitalRead(GO_HOME_PIM);
+  if (go_home && !last_go_home) {
+    last_go_home = go_home;
     Serial.println(-RA_Stepper.getSteps());
     Serial.println(-DEC_Stepper.getSteps());
     RA_Stepper.move(-RA_Stepper.getSteps());
     DEC_Stepper.move(-DEC_Stepper.getSteps());
     delay(100);
   } else {
-    last_r = LOW;
+    last_go_home = LOW;
   }
   
   if (RA_Stepper.actionImminent()) RA_Stepper.nextAction();
@@ -96,20 +96,22 @@ void loop () {
               byte mm = atoi(serialdata+5);
               byte ss = atoi(serialdata+10);
               volatile float fsteps;
-              fsteps = (float)RA_STEPS / 24.0 * hh;
+              fsteps  = (float)RA_STEPS / 24.0 * hh;
               fsteps += (float)RA_STEPS / 1440.0 * mm;
               fsteps += (float)RA_STEPS / 86400.0 * ss;
               //fsteps += (float)RA_STEPS / 8640000.0 * mss;
               long ra_steps = fsteps;
               ra_steps -= ra_steps % 32;
-              if (ra_steps * 2 > RA_STEPS) if ((ra_steps - RA_STEPS/2)*4 < RA_STEPS) ra_steps = ra_steps - RA_STEPS/2;
-              if (ra_steps * 4 > RA_STEPS) ra_steps = RA_STEPS - ra_steps;
-              Serial.print(ra_steps);
-              if (abs(ra_steps)*4>RA_STEPS) {
+              if (RA_Stepper.getSteps()<0) {
+                ra_steps = ra_steps + RA_Stepper.getSteps();
+              } else {
+                ra_steps = ra_steps - RA_Stepper.getSteps();
+              }
+              if (abs(ra_steps)*3>RA_STEPS) {
                 Serial.print('0');
               } else {
                 Serial.print('1');
-                RA_Stepper.move(ra_steps-RA_Stepper.getSteps());
+                RA_Stepper.move(ra_steps);
               }
             } else if (serialdata[0]=='S' && serialdata[1]=='d' && serialdata[5]=='*' && serialdata[8]==':' && serialdata[11]=='#') {
               //:Sd89*00:00#
@@ -118,21 +120,32 @@ void loop () {
               byte mm = atoi(serialdata+6);
               byte ss = atoi(serialdata+9);
               volatile float fsteps;
-              fsteps = (float)DEC_STEPS / 360 * hh;
-              fsteps -= (float)DEC_STEPS / 360 / 60 * mm;
-              fsteps -= (float)DEC_STEPS / 360 / 60 / 60 * ss;
-              //fsteps -= (float)DEC_STEPS / 360 / 60 / 60 / 10 * mss;
+              fsteps  = (float)DEC_STEPS / 360 * hh;
+              fsteps += (float)DEC_STEPS / 360 / 60 * mm;
+              fsteps += (float)DEC_STEPS / 360 / 60 / 60 * ss;
+              //fsteps += (float)DEC_STEPS / 360 / 60 / 60 / 10 * mss;
               long dec_steps = fsteps;
-              dec_steps -= dec_steps % 32;
-              dec_steps = DEC_STEPS/4 - dec_steps;
-              if (negative) dec_steps = -dec_steps;
-              float ra_steps = 1;
-              if (dec_steps > 0 && ra_steps > 0) dec_steps = -dec_steps;
-              if (abs(dec_steps)>DEC_STEPS) {
+              
+              //if (dec_steps>0 and RA_Stepper.getSteps()>0)
+              
+              dec_steps += dec_steps % 32;
+              if (negative) {
+                dec_steps = DEC_STEPS/4 + dec_steps;
+              } else {
+                dec_steps = DEC_STEPS/4 - dec_steps;
+              }
+              dec_steps = -dec_steps;
+
+              if (DEC_Stepper.getSteps()<0) {
+                dec_steps = dec_steps - DEC_Stepper.getSteps();
+              }else {
+                dec_steps = dec_steps + DEC_Stepper.getSteps();
+              }
+              if (abs(dec_steps)*3>DEC_STEPS) {
                 Serial.print('0');
               } else {
                 Serial.print('1');
-                //DEC_Stepper.move(dec_steps-DEC_Stepper.getSteps());
+                DEC_Stepper.move(dec_steps);
               }
             } else if (serialdata[0]=='M' && serialdata[1]=='S') {
               //:MS# Slew to Target Object 
