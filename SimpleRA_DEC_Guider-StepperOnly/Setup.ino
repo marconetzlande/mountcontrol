@@ -10,7 +10,7 @@ void setupStepper()
   pinMode(DEC_PLUS, INPUT_PULLUP);
   pinMode(DEC_MINUS, INPUT_PULLUP);
 
-  pinMode(GO_HOME_PIM, INPUT_PULLUP);
+  pinMode(7, INPUT_PULLUP);
 
   pinMode(LED1, OUTPUT);
 }

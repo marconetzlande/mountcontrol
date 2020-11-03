@@ -107,6 +107,7 @@ class StepperDriver {
     }
 
     byte StepperDriver::calculateMode(float p) {
+      #define MIN_P 250
       byte modes[] = {1,2,4,8,16,32}; //depending on microstepping, we choose 32
       byte n=0;
       while ((p * modes[n]) < MIN_P) n++;
@@ -236,19 +237,6 @@ class StepperDriver {
 
         calculateMode(1000000UL / stepper_freqency);
         stepper_interval = 1000000UL * mode / stepper_freqency;
-
-/*
-        //DEBUGGING
-        Serial.print(mode);
-        Serial.print(';');
-        Serial.print(stepper_interval);
-        Serial.print(';');
-        Serial.print(stepper_freqency);
-        Serial.print(';');
-        Serial.print(steps_done);
-        Serial.print(';');
-        Serial.println(steps_accelerate);
-*/
 
         if (steps_remaining<=0) {
           slowdown = false;
