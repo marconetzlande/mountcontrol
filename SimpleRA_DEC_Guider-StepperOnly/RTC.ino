@@ -40,6 +40,7 @@ boolean isGuiding() {
 
 void startGuiding() {
   raGuiding = true;
+  RA_Stepper.setDirection(1);
   RA_Stepper.enable();
   attachInterrupt(digitalPinToInterrupt(RTC_SQW), RTCGuidingStep, FALLING);
 }

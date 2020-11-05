@@ -12,34 +12,33 @@ void loop () {
 
   boolean dec_control_pressed = (dec_plus xor dec_minus);
   boolean ra_control_pressed = (ra_plus xor ra_minus);
+  boolean go_home = (dec_plus && dec_minus && ra_plus && ra_minus);
 
-  if ((ra_plus && ra_minus) && (!dec_plus || dec_minus)) {
-    startGuiding();
-    delay(1000);
-  }
-
-  if (ra_control_pressed) {
-    stopGuiding();
-    RA_Stepper.setDirection(ra_plus);
-    RA_Stepper.speedup();
-  } else {
-    if (RA_Stepper.breaks()) {
-      if (!isGuiding()) RA_Stepper.disable();
+  if (!go_home) {
+    if ((ra_plus && ra_minus) && (!dec_plus || dec_minus)) {
+      startGuiding();
+      delay(1000);
+    } else if (ra_control_pressed) {
+      stopGuiding();
+      RA_Stepper.setDirection(ra_plus);
+      RA_Stepper.speedup();
+    } else {
+      if (RA_Stepper.breaks()) {
+        if (!isGuiding()) RA_Stepper.disable();
+      }
     }
-  }
-
-  if (dec_control_pressed) {
-    DEC_Stepper.setDirection(dec_plus);
-     DEC_Stepper.speedup();
-  } else {
-    if (DEC_Stepper.breaks()) {
-       DEC_Stepper.disable();
+  
+    if (dec_control_pressed) {
+      DEC_Stepper.setDirection(dec_plus);
+       DEC_Stepper.speedup();
+    } else {
+      if (DEC_Stepper.breaks()) {
+         DEC_Stepper.disable();
+      }
     }
   }
   
   static boolean last_go_home = false;
-//  boolean go_home = !digitalRead(GO_HOME_PIM);
-  boolean go_home = (dec_plus && dec_minus && ra_plus && ra_minus);
   if (go_home && !last_go_home) {
     last_go_home = go_home;
     RA_Stepper.move(-RA_Stepper.getSteps());
