@@ -11,7 +11,60 @@ void handleSerial() {
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='Q' && serialdata[3]=='#') {
       recvd = true;
       serialdata[i]='\0';
+    //#:GC#
+    if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='C' && serialdata[4]=='#') {
+      recvd = true;
+      serialdata[i]='\0';
+      DateTime now = rtc.now();
+      Serial.print(now.year(), DEC);
+      Serial.print('/');
+      Serial.print(now.month(), DEC);
+      Serial.print('/');
+      Serial.print(now.day(), DEC);
+      Serial.print('#');
+      //Returns: MM/DD/YY
     }
+    
+    //#:GL#
+    if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='L' && serialdata[4]=='#') {
+      recvd = true;
+      serialdata[i]='\0';
+      DateTime now = rtc.now();
+      Serial.print(now.hour(), DEC);
+      Serial.print(':');
+      Serial.print(now.minute(), DEC);
+      Serial.print(':');
+      Serial.print(now.second(), DEC);
+      Serial.println('#');
+      //Returns: HH:MM:SS#
+    }
+    
+    //:SCMM/DD/YY#
+    if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='C' && serialdata[5]=='/' && serialdata[8]=='/' && serialdata[11]=='#') {
+      recvd = true;
+      serialdata[i]='\0';
+      byte MM = atoi(serialdata+3);
+      byte DD = atoi(serialdata+6);
+      byte YY = atoi(serialdata+9);
+      DateTime now = rtc.now();
+      DateTime newTime = DateTime(YY,MM,DD,now.hour(),now.minute(),now.second());
+      rtc.adjust(newTime);
+      Serial.print('1');
+    }
+    
+    //:SLHH:MM:SS# //:SSHH:MM:SS#
+    if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='L' && serialdata[5]==':' && serialdata[8]==':' && serialdata[11]=='#') {
+      recvd = true;
+      serialdata[i]='\0';
+      byte hh = atoi(serialdata+3);
+      byte mm = atoi(serialdata+6);
+      byte ss = atoi(serialdata+9);
+      DateTime now = rtc.now();
+      DateTime newTime = DateTime(now.year(),now.month(),now.day(),hh,mm,ss);
+      rtc.adjust(newTime);
+      Serial.print('1');
+    }
+
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='R' && serialdata[4]=='#') {
       recvd = true;
       serialdata[i]='\0';
