@@ -8,9 +8,13 @@ void handleSerial() {
 
   if ((i==0 && (Serial.peek() == '#'||Serial.peek() == ':')) || i>0) {
     serialdata[i++] = Serial.read();
+
+    //#:Q#
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='Q' && serialdata[3]=='#') {
       recvd = true;
       serialdata[i]='\0';
+    }
+    
     //#:GC#
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='C' && serialdata[4]=='#') {
       recvd = true;
@@ -65,6 +69,7 @@ void handleSerial() {
       Serial.print('1');
     }
 
+    //
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='R' && serialdata[4]=='#') {
       recvd = true;
       serialdata[i]='\0';
@@ -77,6 +82,8 @@ void handleSerial() {
       sprintf(s, "%02d:%02d:%02d#", int(hh), int(mm), int(ss));
       Serial.print(s);
     } 
+
+    //
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='D' && serialdata[4]=='#') {
       recvd = true;
       serialdata[i]='\0';
@@ -89,7 +96,10 @@ void handleSerial() {
       sprintf(s, "%+03d*%02d:%02d#", int(hh), int(mm), int(ss));
       Serial.print(s);
     }
+
+    //:Sr01:00:00#
     if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='r' && serialdata[5]==':' && serialdata[8]==':' && serialdata[11]=='#') {
+      //HA = LST-RA
       recvd = true;
       serialdata[i]='\0';
       //:Sr01:00:00#
@@ -115,6 +125,8 @@ void handleSerial() {
         RA_Stepper.move(ra_steps);
       }
     }
+
+    //:Sd+89*00:00#
     if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='d' && serialdata[6]=='*' && serialdata[9]==':' && serialdata[12]=='#') {
       recvd = true;
       serialdata[i]='\0';
@@ -152,6 +164,7 @@ void handleSerial() {
         DEC_Stepper.move(dec_steps);
       }
     }
+    
     if (serialdata[0]==':' && serialdata[1]=='M' && serialdata[2]=='S' && serialdata[3]=='#') {
       recvd = true;
       //:MS# Slew to Target Object 
@@ -160,6 +173,7 @@ void handleSerial() {
       //         2<string># Object Below Higher w/string message 
       Serial.print('0');
     }
+    
     if (recvd || serialdata[i] == '#' || (i>13)) {
       for(byte n = 0; n< 30-i; n++ ) {
         serialdata[n] = serialdata[i+n];
