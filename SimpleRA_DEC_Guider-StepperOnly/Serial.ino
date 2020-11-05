@@ -101,6 +101,7 @@ void handleSerial() {
     //:Sr01:00:00#
     if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='r' && serialdata[5]==':' && serialdata[8]==':' && serialdata[11]=='#') {
       DateTime LST = rtc.now();
+      while (LST.hour() == 165) LST = rtc.now(); //fix for buggy value
       //HA = LST-RA
       recvd = true;
       serialdata[i]='\0';
