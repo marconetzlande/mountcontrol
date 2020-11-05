@@ -40,7 +40,7 @@ void handleSerial() {
       Serial.print(now.minute(), DEC);
       Serial.print(':');
       Serial.print(now.second(), DEC);
-      Serial.println('#');
+      Serial.print('#');
       //Returns: HH:MM:SS#
     }
     
@@ -118,7 +118,7 @@ void handleSerial() {
       fsteps += (float)RA_STEPS / 1440.0 * LST.minute();
       fsteps += (float)RA_STEPS / 86400.0 * LST.second();
 
-      //long ha_steps = fsteps;
+      //long lst_steps = fsteps;
       ra_steps = fsteps - ra_steps;
 
       ra_steps -= ra_steps % 32;

@@ -50,5 +50,5 @@ void loop () {
   
   if (RA_Stepper.actionImminent()) RA_Stepper.nextAction();
   if (DEC_Stepper.actionImminent()) DEC_Stepper.nextAction();
-  if (Serial.available() > 0)  handleSerial();
+  if (Serial.available() > 0) handleSerial();
 }
