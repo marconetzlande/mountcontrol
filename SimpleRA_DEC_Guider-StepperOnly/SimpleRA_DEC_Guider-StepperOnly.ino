@@ -13,6 +13,11 @@ void loop () {
   boolean dec_control_pressed = (dec_plus xor dec_minus);
   boolean ra_control_pressed = (ra_plus xor ra_minus);
 
+  if ((ra_plus && ra_minus) && (!dec_plus || dec_minus)) {
+    startGuiding();
+    delay(1000);
+  }
+
   if (ra_control_pressed) {
     RA_Stepper.setDirection(ra_plus);
     RA_Stepper.speedup();
