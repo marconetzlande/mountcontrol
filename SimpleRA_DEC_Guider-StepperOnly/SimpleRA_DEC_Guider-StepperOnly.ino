@@ -31,8 +31,9 @@ void loop () {
     }
   }
   
-  static boolean last_go_home = LOW;
-  boolean go_home = !digitalRead(GO_HOME_PIM);
+  static boolean last_go_home = false;
+//  boolean go_home = !digitalRead(GO_HOME_PIM);
+  boolean go_home = (dec_plus && dec_minus && ra_plus && ra_minus);
   if (go_home && !last_go_home) {
     last_go_home = go_home;
     RA_Stepper.move(-RA_Stepper.getSteps());
