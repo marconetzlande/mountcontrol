@@ -169,7 +169,19 @@ class StepperDriver {
         gotomode = true;
       }
     }
-  
+
+    void StepperDriver::step() {
+      if (!enabled) {
+        digitalWrite(enable_pin, LOW);
+        digitalWrite(dir_pin, dir);
+        enabled = true;
+      }
+      digitalWrite(step_pin, HIGH);
+      if (dir) {steps += mode;} else {steps -= mode;};
+      delayMicroseconds(30);
+      digitalWrite(step_pin, LOW);
+    }
+    
     long StepperDriver::nextAction() {
       if (steps_remaining > 0) {
         if (gotomode) {
