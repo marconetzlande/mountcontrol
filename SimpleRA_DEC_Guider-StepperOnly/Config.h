@@ -22,8 +22,8 @@
 #define RA_MINUS            21
 
 #define LED1                13
-//#define RTC_SQW              7
-#define GO_HOME_PIM          7
+#define RTC_SQW              7
+//#define GO_HOME_PIM         17
 #define WireSDA              2
 #define WireSLC              3
 #define VOLTAGE_PIN         23 // A5
