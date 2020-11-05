@@ -13,6 +13,7 @@ void handleSerial() {
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='Q' && serialdata[3]=='#') {
       recvd = true;
       serialdata[i]='\0';
+      stopGuiding();
     }
     
     //#:GC#
@@ -99,10 +100,10 @@ void handleSerial() {
 
     //:Sr01:00:00#
     if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='r' && serialdata[5]==':' && serialdata[8]==':' && serialdata[11]=='#') {
+      DateTime LST = rtc.now();
       //HA = LST-RA
       recvd = true;
       serialdata[i]='\0';
-      //:Sr01:00:00#
       byte hh = atoi(serialdata+3);
       byte mm = atoi(serialdata+6);
       byte ss = atoi(serialdata+9);
@@ -112,6 +113,14 @@ void handleSerial() {
       fsteps += (float)RA_STEPS / 86400.0 * ss;
       //fsteps += (float)RA_STEPS / 8640000.0 * mss;
       long ra_steps = fsteps;
+
+      fsteps  = (float)RA_STEPS / 24.0 * LST.hour();
+      fsteps += (float)RA_STEPS / 1440.0 * LST.minute();
+      fsteps += (float)RA_STEPS / 86400.0 * LST.second();
+
+      //long ha_steps = fsteps;
+      ra_steps = fsteps - ra_steps;
+
       ra_steps -= ra_steps % 32;
       if (RA_Stepper.getSteps()<0) {
         ra_steps = ra_steps + RA_Stepper.getSteps();
@@ -122,6 +131,7 @@ void handleSerial() {
         Serial.print('0');
       } else {
         Serial.print('1');
+        stopGuiding();
         RA_Stepper.move(ra_steps);
       }
     }
@@ -130,7 +140,6 @@ void handleSerial() {
     if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='d' && serialdata[6]=='*' && serialdata[9]==':' && serialdata[12]=='#') {
       recvd = true;
       serialdata[i]='\0';
-      //:Sd+89*00:00#
       boolean negative = (serialdata[2] == '-');
       byte hh = atoi(serialdata+4);
       byte mm = atoi(serialdata+7);
@@ -171,6 +180,7 @@ void handleSerial() {
       //Returns: 0 Slew is Possible 
       //         1<string># Object Below Horizon w/string message 
       //         2<string># Object Below Higher w/string message 
+      startGuiding();
       Serial.print('0');
     }
     

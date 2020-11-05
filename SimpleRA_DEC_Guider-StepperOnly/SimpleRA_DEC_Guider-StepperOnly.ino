@@ -19,11 +19,12 @@ void loop () {
   }
 
   if (ra_control_pressed) {
+    stopGuiding();
     RA_Stepper.setDirection(ra_plus);
     RA_Stepper.speedup();
   } else {
     if (RA_Stepper.breaks()) {
-      RA_Stepper.disable();
+      if (!isGuiding()) RA_Stepper.disable();
     }
   }
 
