@@ -35,8 +35,6 @@ void loop () {
   boolean go_home = !digitalRead(GO_HOME_PIM);
   if (go_home && !last_go_home) {
     last_go_home = go_home;
-    Serial.println(-RA_Stepper.getSteps());
-    Serial.println(-DEC_Stepper.getSteps());
     RA_Stepper.move(-RA_Stepper.getSteps());
     DEC_Stepper.move(-DEC_Stepper.getSteps());
     delay(100);
