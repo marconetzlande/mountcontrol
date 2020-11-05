@@ -270,6 +270,14 @@ class StepperDriver {
         return stepper_interval;
       }
     }
+
+    void StepperDriver::enable() {
+      if (!enabled) {
+        digitalWrite(enable_pin, LOW);
+        digitalWrite(LED1, LOW);
+        enabled = true;
+      }
+    }
   
     long StepperDriver::disable(void) {
       if (enabled) {
