@@ -1,13 +1,17 @@
 #include "RTClib.h"
+#include "Wire.h"
 RTC_DS1307 rtc;
 
 void setupRTC() {  
-  delay(1000);
+  delay(2000);
+  Wire.begin();
   if (!rtc.begin()) {
     Serial.println("Couldn't find RTC");
     Serial.flush();
     abort();
-  } /*else {
+  } 
+  /* else {
+    rtc.adjust(DateTime(__DATE__, __TIME__));
     DateTime now = rtc.now();
     Serial.print(now.year(), DEC);
     Serial.print('/');
@@ -21,10 +25,11 @@ void setupRTC() {
     Serial.print(':');
     Serial.print(now.second(), DEC);
     Serial.println();
-  }*/
 
+  } */
+  
   if (! rtc.isrunning()) {
-     //Serial.println("RTC is NOT running!");
+     Serial.println("RTC is NOT running!");
      rtc.adjust(DateTime(__DATE__, __TIME__));
   }
   
@@ -32,6 +37,27 @@ void setupRTC() {
   pinMode(RTC_SQW, INPUT_PULLUP);
 }
 
+DateTime rtcnow;
+
+//filter wrong rtc responses
+void getRTC_Time() {
+  rtcnow = rtc.now();
+  byte n = 0;
+  while (
+    (rtcnow.year()  == 2165) ||
+    (rtcnow.month()  > 12)   || (rtcnow.month()  == 0)   || 
+    (rtcnow.day()    > 31)   || (rtcnow.day()    == 0)   || 
+    (rtcnow.hour()   > 60)   || 
+    (rtcnow.minute() > 60)   ||
+    (rtcnow.second() > 60)   && 
+    ( n < 2 ) // Do not retry more than 2 times.
+  ) {
+    n++;
+    delayMicroseconds(100);
+    rtcnow = rtc.now();
+  }
+
+}
 boolean raGuiding = false;
 
 boolean isGuiding() {
