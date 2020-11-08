@@ -189,30 +189,29 @@ void stopGuiding() {
 }
 
 void RTCGuidingStep() {
-  static double ra_precise = RA_DIVISOR;
-  static long ra_divisor = RA_DIVISOR;
-  static long fc = 0;
-  fc++;
-  
-  if (fc>ra_divisor) {
-    fc=0;
-
-    //Serial.println(ra_divisor);
-    //Serial.println(ra_precise);
+  if (raGuiding) {
+    static double ra_precise = RA_DIVISOR;
+    static long ra_divisor = RA_DIVISOR;
+    static long fc = 0;
+    fc++;
     
-    RA_Stepper.step();
-
-    //moreprecise ra guiding
-    ra_precise = (ra_precise + ra_divisor)/2;
-    boolean ra_diff = (fabs(ra_precise - RA_DIVISOR)>=0.1);
-    if (ra_diff) {
-      if (ra_precise > RA_DIVISOR) {
-        ra_divisor = RA_DIVISOR-1;
+    if (fc>ra_divisor) {
+      fc=0;
+      
+      RA_Stepper.step();
+  
+      //moreprecise ra guiding
+      ra_precise = (ra_precise + ra_divisor)/2;
+      boolean ra_diff = (fabs(ra_precise - RA_DIVISOR)>=0.1);
+      if (ra_diff) {
+        if (ra_precise > RA_DIVISOR) {
+          ra_divisor = RA_DIVISOR-1;
+        } else {
+          ra_divisor = RA_DIVISOR+1;
+        }
       } else {
-        ra_divisor = RA_DIVISOR+1;
+        ra_divisor = RA_DIVISOR;
       }
-    } else {
-      ra_divisor = RA_DIVISOR;
     }
   }
 }
