@@ -20,26 +20,42 @@ void handleSerial() {
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='C' && serialdata[4]=='#') {
       recvd = true;
       serialdata[i]='\0';
-      DateTime now = rtc.now();
-      Serial.print(now.year(), DEC);
+      getRTC_Time();
+      while (rtcnow.hour() == 165) rtcnow = rtc.now();
+      Serial.print(rtcnow.year(), DEC);
       Serial.print('/');
-      Serial.print(now.month(), DEC);
+      Serial.print(rtcnow.month(), DEC);
       Serial.print('/');
-      Serial.print(now.day(), DEC);
+      Serial.print(rtcnow.day(), DEC);
       Serial.print('#');
       //Returns: MM/DD/YY
+    }
+
+    //#:GS#
+    if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='S' && serialdata[4]=='#') {
+      recvd = true;
+      serialdata[i]='\0';
+      getRTC_Time();
+      CalculateLST();
+      Serial.print(lstnow.hour(), DEC);
+      Serial.print(':');
+      Serial.print(lstnow.minute(), DEC);
+      Serial.print(':');
+      Serial.print(lstnow.second(), DEC);
+      Serial.print('#');
+      //Returns: HH:MM:SS#
     }
     
     //#:GL#
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='L' && serialdata[4]=='#') {
       recvd = true;
       serialdata[i]='\0';
-      DateTime now = rtc.now();
-      Serial.print(now.hour(), DEC);
+      getRTC_Time();
+      Serial.print(rtcnow.hour(), DEC);
       Serial.print(':');
-      Serial.print(now.minute(), DEC);
+      Serial.print(rtcnow.minute(), DEC);
       Serial.print(':');
-      Serial.print(now.second(), DEC);
+      Serial.print(rtcnow.second(), DEC);
       Serial.print('#');
       //Returns: HH:MM:SS#
     }
@@ -51,8 +67,8 @@ void handleSerial() {
       byte MM = atoi(serialdata+3);
       byte DD = atoi(serialdata+6);
       byte YY = atoi(serialdata+9);
-      DateTime now = rtc.now();
-      DateTime newTime = DateTime(YY,MM,DD,now.hour(),now.minute(),now.second());
+      getRTC_Time();
+      DateTime newTime = DateTime(YY,MM,DD,rtcnow.hour(),rtcnow.minute(),rtcnow.second());
       rtc.adjust(newTime);
       Serial.print('1');
     }
@@ -64,47 +80,86 @@ void handleSerial() {
       byte hh = atoi(serialdata+3);
       byte mm = atoi(serialdata+6);
       byte ss = atoi(serialdata+9);
-      DateTime now = rtc.now();
-      DateTime newTime = DateTime(now.year(),now.month(),now.day(),hh,mm,ss);
+      getRTC_Time();
+      DateTime newTime = DateTime(rtcnow.year(),rtcnow.month(),rtcnow.day(),hh,mm,ss);
       rtc.adjust(newTime);
       Serial.print('1');
     }
 
-    //
+    //#:GR#
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='R' && serialdata[4]=='#') {
       recvd = true;
       serialdata[i]='\0';
       char s[9];
-      float ra = abs(RA_Stepper.getSteps());
+      
+      getRTC_Time();
+      CalculateLST();
+      DateTime LST = lstnow;
+      float lst = 0;
+      lst  = (float)RA_STEPS / 24.0 * LST.hour();
+      lst += (float)RA_STEPS / 1440.0 * LST.minute();
+      lst += (float)RA_STEPS / 86400.0 * LST.second();
+
+      long steps = RA_Stepper.getSteps();
+      
+      if (DEC_Stepper.getSteps() > 0){
+        steps = RA_STEPS/4 + steps;
+      } else {
+        steps = RA_STEPS/4 - steps;
+        steps = - steps;
+      }
+
+      //RA = LST - HA
+      steps = lst - steps;
+      
+      if (steps<0) steps += RA_STEPS;
+      if (steps>RA_STEPS) steps -= RA_STEPS;
+
+      float ra = steps;            
       ra = ra * 24 / (float)RA_STEPS;
       byte hh =   ra;
       byte mm = ( ra - hh) * 60.0;
       byte ss = ((ra - hh) * 60.0 - mm ) * 60.0;
+     
       sprintf(s, "%02d:%02d:%02d#", int(hh), int(mm), int(ss));
       Serial.print(s);
     } 
 
-    //
+    //#:GD#
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='G' && serialdata[3]=='D' && serialdata[4]=='#') {
       recvd = true;
       serialdata[i]='\0';
       char s[10];
-      float dec = abs(DEC_Stepper.getSteps() + DEC_STEPS/4);
+      long steps = DEC_Stepper.getSteps();
+      if (steps < 0 ) {
+        steps = DEC_STEPS/4 + steps;
+      } else {
+        steps = DEC_STEPS/4 - steps;
+      }
+      char sign;
+      if (steps < 0) {
+        sign = '-';
+      } else {
+        sign = '+';
+      }
+      float dec = abs(steps);
       dec = dec * 360 / (float)DEC_STEPS;
       byte hh =    dec;
       byte mm = (  dec - hh ) * 60.0;
       byte ss = (( dec - hh ) * 60.0 - mm ) * 60.0;
-      sprintf(s, "%+03d*%02d:%02d#", int(hh), int(mm), int(ss));
+      sprintf(s, "%c%02d*%02d:%02d#", sign, int(hh), int(mm), int(ss));
       Serial.print(s);
     }
 
     //:Sr01:00:00#
     if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='r' && serialdata[5]==':' && serialdata[8]==':' && serialdata[11]=='#') {
-      DateTime LST = rtc.now();
-      while (LST.hour() == 165) LST = rtc.now(); //fix for buggy value
-      //HA = LST-RA
       recvd = true;
       serialdata[i]='\0';
+
+      getRTC_Time();
+      CalculateLST();
+      DateTime LST = lstnow;
+      
       byte hh = atoi(serialdata+3);
       byte mm = atoi(serialdata+6);
       byte ss = atoi(serialdata+9);
@@ -113,13 +168,13 @@ void handleSerial() {
       fsteps += (float)RA_STEPS / 1440.0 * mm;
       fsteps += (float)RA_STEPS / 86400.0 * ss;
       //fsteps += (float)RA_STEPS / 8640000.0 * mss;
-      long ra_steps = fsteps;
-
+      long ra_steps = RA_STEPS/4 + fsteps; //TODO fix this
+      
       fsteps  = (float)RA_STEPS / 24.0 * LST.hour();
       fsteps += (float)RA_STEPS / 1440.0 * LST.minute();
       fsteps += (float)RA_STEPS / 86400.0 * LST.second();
 
-      //long lst_steps = fsteps;
+      //HA = LST - RA
       ra_steps = fsteps - ra_steps;
 
       ra_steps -= ra_steps % 32;
@@ -128,12 +183,13 @@ void handleSerial() {
       } else {
         ra_steps = ra_steps - RA_Stepper.getSteps();
       }
+
       if (abs(ra_steps)*3>RA_STEPS) {
         Serial.print('0');
       } else {
         Serial.print('1');
         stopGuiding();
-        RA_Stepper.move(ra_steps);
+        RA_Stepper.move(-ra_steps);
       }
     }
 
@@ -152,21 +208,23 @@ void handleSerial() {
       //fsteps += (float)DEC_STEPS / 360 / 60 / 60 / 10 * mss;
       long dec_steps = fsteps;
       
-      //if (dec_steps>0 and RA_Stepper.getSteps()>0)
-      
       dec_steps += dec_steps % 32;
       if (negative) {
         dec_steps = DEC_STEPS/4 + dec_steps;
       } else {
         dec_steps = DEC_STEPS/4 - dec_steps;
       }
-      dec_steps = -dec_steps;
+      
+      // Das muss von der RA-Richtugn abhängen und umgekehrt.
+      if (RA_Stepper.getSteps()>0) dec_steps = -dec_steps;
 
+      // Delta berechnen.
       if (DEC_Stepper.getSteps()<0) {
         dec_steps = dec_steps - DEC_Stepper.getSteps();
-      }else {
+      } else {
         dec_steps = dec_steps + DEC_Stepper.getSteps();
       }
+      
       if (abs(dec_steps)*3>DEC_STEPS) {
         Serial.print('0');
       } else {
@@ -181,8 +239,19 @@ void handleSerial() {
       //Returns: 0 Slew is Possible 
       //         1<string># Object Below Horizon w/string message 
       //         2<string># Object Below Higher w/string message 
-      startGuiding();
+      //startGuiding();
       Serial.print('0');
+    }
+
+    if (serialdata[0]==':' && serialdata[1]=='B' && serialdata[2]=='V' && serialdata[3]=='#') {
+      recvd = true;
+      // 4.8v = 12v 
+      // 5v = 1023
+      // V = 5/1023*analogValue/4.8*12
+      // Spannungsteiler R1 = 220kΩ, R2 = 330kΩ
+      float analogValue = analogRead(VOLTAGE_PIN)/81.84;
+      //int analogValue = analogRead(VOLTAGE_PIN);
+      Serial.println(analogValue);
     }
     
     if (recvd || serialdata[i] == '#' || (i>13)) {
