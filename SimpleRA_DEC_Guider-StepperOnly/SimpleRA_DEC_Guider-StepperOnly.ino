@@ -3,7 +3,7 @@
 
 StepperDriver RA_Stepper(RA_STEPPER_STEP, RA_STEPPER_DIR, RA_STEPPER_ENABLE, RA_STEPPER_MODE0, RA_STEPPER_MODE1, RA_STEPPER_MODE2);
 StepperDriver DEC_Stepper(DEC_STEPPER_STEP, DEC_STEPPER_DIR, DEC_STEPPER_ENABLE, DEC_STEPPER_MODE0, DEC_STEPPER_MODE1, DEC_STEPPER_MODE2);
-    
+
 void loop () {
   boolean dec_plus  = !digitalRead(DEC_PLUS);
   boolean dec_minus = !digitalRead(DEC_MINUS);
