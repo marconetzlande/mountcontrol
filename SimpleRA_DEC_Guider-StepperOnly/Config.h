@@ -31,7 +31,7 @@
 #define MIN_P                           500 //minimum time between pulses in μs
 #define RA_MICROSTEPS                  32UL
 #define RA_MAX_FREQUENCY            12800UL
-#define RA_ACCELERATION              2048UL
+#define RA_ACCELERATION              4096UL
 
 /* currently not used
 #define DEC_MAX_FREQUENCY            6400UL
@@ -40,11 +40,24 @@
 */
 
 #define RA_STEPS                  3308800UL
-#define DEC_STEPS                 2112000UL
+#define DEC_STEPS                 2117440UL
+
+/**
+ * DEC Achse nachmessung 
+ *  2.120.987 /1 = 2.120.987
+ *  4.242.040 /2 = 2.121.020
+ *  6.361.153 /3 = 2.120.384,3333333333333333333333333
+ *  8.486.365 /4 = 2.121.591,25
+ * 10.593.300 /5 = 2.118.660
+ * 12.714.207 /6 = 2.119.034,5
+ * 14.829.756 /7 = 2.118.536,5714285714285714285714286
+ * 16.941.668 /8 = 2.117.708,5
+ * 19.057.116 /9 = 2.117.457,3333333333333333333333
+ * 
+ **/
 
 //messung:
 //RA: 360° = 3.308.800 steps / 6400 = 517 fullsteps
-//DEC: 360° = 2.112.000 steps / 6400 = 330 fullsteps
 //1 step = 0,00010879866927138740063054873213284 ° = 0,39167520937699464226997543567823″
 //1 step = 0,02611168062513297615133169571188s = 38,297037037037037037037037037037Hz
 //858,44761223187172395118082822383 oszillation per step
