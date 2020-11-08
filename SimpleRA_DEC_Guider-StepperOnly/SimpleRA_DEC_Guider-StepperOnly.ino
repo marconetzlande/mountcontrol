@@ -30,7 +30,7 @@ void loop () {
   
     if (dec_control_pressed) {
       DEC_Stepper.setDirection(dec_plus);
-       DEC_Stepper.speedup();
+      DEC_Stepper.speedup();
     } else {
       if (DEC_Stepper.breaks()) {
          DEC_Stepper.disable();
