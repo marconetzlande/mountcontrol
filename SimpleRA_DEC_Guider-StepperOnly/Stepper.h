@@ -90,7 +90,7 @@ class StepperDriver {
     }
   
     void StepperDriver::setDirection(boolean d) {
-      dir = d;
+      if (!enabled) dir = d;
     }
 
     void StepperDriver::speedup() {
