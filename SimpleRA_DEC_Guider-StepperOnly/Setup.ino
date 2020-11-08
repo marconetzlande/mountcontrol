@@ -19,4 +19,22 @@ void setup () {
   Serial.begin(115200);
   setupRTC();
   setupStepper();
+/*
+  while (true) {
+    getRTC_Time();
+    Serial.print(rtcnow.year(), DEC);
+    Serial.print('/');
+    Serial.print(rtcnow.month(), DEC);
+    Serial.print('/');
+    Serial.print(rtcnow.day(), DEC);
+    Serial.print(' ');
+    Serial.print(rtcnow.hour(), DEC);
+    Serial.print(':');
+    Serial.print(rtcnow.minute(), DEC);
+    Serial.print(':');
+    Serial.print(rtcnow.second(), DEC);
+    Serial.println();
+    delay(500);
+  }
+*/
 }
