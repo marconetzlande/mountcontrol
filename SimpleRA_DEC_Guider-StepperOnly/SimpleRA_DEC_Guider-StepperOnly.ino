@@ -41,9 +41,15 @@ void loop () {
   static boolean last_go_home = false;
   if (go_home && !last_go_home) {
     last_go_home = go_home;
+    while (!RA_Stepper.breaks()||!DEC_Stepper.breaks()) {
+      RA_Stepper.nextAction();
+      DEC_Stepper.nextAction();
+    }
+    RA_Stepper.disable();
+    DEC_Stepper.disable();
+    delay(1000);
     RA_Stepper.move(-RA_Stepper.getSteps());
     DEC_Stepper.move(-DEC_Stepper.getSteps());
-    delay(100);
   } else {
     last_go_home = LOW;
   }
