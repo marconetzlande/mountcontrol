@@ -184,12 +184,18 @@ void handleSerial() {
         ra_steps = ra_steps - RA_Stepper.getSteps();
       }
 
-      if (abs(ra_steps)*3>RA_STEPS) {
+      if (ra_steps<0) {
+        if (ra_steps*2 < -RA_STEPS) ra_steps += RA_STEPS/2;
+      } else {
+        if (ra_steps*2 >  RA_STEPS) ra_steps -= RA_STEPS/2;
+      }
+      
+      if (abs(ra_steps)*2 > RA_STEPS) {
         Serial.print('0');
       } else {
         Serial.print('1');
         stopGuiding();
-        RA_Stepper.move(-ra_steps);
+        RA_Stepper.move(ra_steps);
       }
     }
 
