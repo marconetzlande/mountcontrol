@@ -9,6 +9,125 @@ void handleSerial() {
   if ((i==0 && (Serial.peek() == '#'||Serial.peek() == ':')) || i>0) {
     serialdata[i++] = Serial.read();
 
+    static long ra_target_steps = 0;
+    static long dec_target_steps = 0;
+
+    /** 
+     *  Handle each command by length to detect unsupported commands
+     *  Nest the if statements.
+     *  
+     *  if (serialdata[0]==':') {
+     *    if (serialdata[1]=='S') {
+     *    } else {
+     *      error();
+     *    }
+     *  } else if (serialdata[0]=='#') {
+     *    if (serialdata[1]==':') {
+     *      if (serialdata[1]=='G') {
+     *      }
+     *    } else {
+     *      error();
+     *    }
+     *  } else {
+     *    error();
+     *  }
+     */
+    
+    
+    //:Sr23:29:41#
+    //:Sr00:42:44#
+    if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='r' && serialdata[5]==':' && serialdata[8]==':' && serialdata[11]=='#') {
+      recvd = true;
+      serialdata[i]='\0';
+
+      getRTC_Time();
+      CalculateLST();
+      DateTime LST = lstnow;
+      
+      byte hh = atoi(serialdata+3);
+      byte mm = atoi(serialdata+6);
+      byte ss = atoi(serialdata+9);
+      volatile float fsteps;
+      fsteps  = (float)RA_STEPS / 24.0 * hh;
+      fsteps += (float)RA_STEPS / 1440.0 * mm;
+      fsteps += (float)RA_STEPS / 86400.0 * ss;
+      //fsteps += (float)RA_STEPS / 8640000.0 * mss;
+      
+      long ra_steps =  fsteps;
+      if (fsteps > 0){
+        ra_steps = RA_STEPS/4 + ra_steps;
+      } else {
+        ra_steps = RA_STEPS/4 + ra_steps;
+        ra_steps = -ra_steps;
+      }
+      
+      fsteps  = (float)RA_STEPS / 24.0 * LST.hour();
+      fsteps += (float)RA_STEPS / 1440.0 * LST.minute();
+      fsteps += (float)RA_STEPS / 86400.0 * LST.second();
+
+      //HA = LST - RA
+      ra_steps = fsteps - ra_steps;
+      
+      //Sorgt dafür, dass im Süden die Achsen einmal getauscht werden.
+      if (ra_steps<0) {
+        while (ra_steps*2 < -RA_STEPS) ra_steps += RA_STEPS/2;
+      } else {
+        while (ra_steps*2 >  RA_STEPS) ra_steps -= RA_STEPS/2;
+      }
+
+      ra_steps -= ra_steps % 32;
+
+      if (abs(ra_steps)*2 > RA_STEPS) {
+        ra_target_steps = 0;
+        Serial.print('0');
+      } else {
+        Serial.print('1');
+        ra_target_steps = ra_steps;
+        
+        // Delta berechnen.
+        ra_steps -= RA_Stepper.getSteps();
+        stopGuiding();
+        RA_Stepper.move(ra_steps);
+      }
+    }
+    
+    //:Sd+89*00:00#
+    if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='d' && serialdata[6]=='*' && serialdata[9]==':' && serialdata[12]=='#') {
+      recvd = true;
+      serialdata[i]='\0';
+      boolean negative = (serialdata[2] == '-');
+      byte hh = atoi(serialdata+4);
+      byte mm = atoi(serialdata+7);
+      byte ss = atoi(serialdata+10);
+      volatile float fsteps;
+      fsteps  = (float)DEC_STEPS / 360 * hh;
+      fsteps += (float)DEC_STEPS / 360 / 60 * mm;
+      fsteps += (float)DEC_STEPS / 360 / 60 / 60 * ss;
+      //fsteps += (float)DEC_STEPS / 360 / 60 / 60 / 10 * mss;
+      long dec_steps = fsteps;
+      
+      dec_steps += dec_steps % 32;
+      if (negative) {
+        dec_steps = DEC_STEPS/4 + dec_steps;
+      } else {
+        dec_steps = DEC_STEPS/4 - dec_steps;
+      }
+      
+      // Das muss von der RA-Richtugn abhängen und umgekehrt. Weiterhin muss die DEC-Richtung vom Zielpunkt abhängen, nicht vom Aktuellen Punkt.
+      if (ra_target_steps > 0) dec_steps = -dec_steps;
+      
+      if (abs(dec_steps)*3>DEC_STEPS) {
+        dec_target_steps = 0;
+        Serial.print('0');
+      } else {
+        Serial.print('1');
+        dec_target_steps = dec_steps;
+        // Delta berechnen.
+        dec_steps -= DEC_Stepper.getSteps();
+        DEC_Stepper.move(dec_steps);
+      }
+    }
+
     //#:Q#
     if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='Q' && serialdata[3]=='#') {
       recvd = true;
@@ -149,94 +268,6 @@ void handleSerial() {
       byte ss = (( dec - hh ) * 60.0 - mm ) * 60.0;
       sprintf(s, "%c%02d*%02d:%02d#", sign, int(hh), int(mm), int(ss));
       Serial.print(s);
-    }
-
-    //:Sr01:00:00#
-    if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='r' && serialdata[5]==':' && serialdata[8]==':' && serialdata[11]=='#') {
-      recvd = true;
-      serialdata[i]='\0';
-
-      getRTC_Time();
-      CalculateLST();
-      DateTime LST = lstnow;
-      
-      byte hh = atoi(serialdata+3);
-      byte mm = atoi(serialdata+6);
-      byte ss = atoi(serialdata+9);
-      volatile float fsteps;
-      fsteps  = (float)RA_STEPS / 24.0 * hh;
-      fsteps += (float)RA_STEPS / 1440.0 * mm;
-      fsteps += (float)RA_STEPS / 86400.0 * ss;
-      //fsteps += (float)RA_STEPS / 8640000.0 * mss;
-      long ra_steps = RA_STEPS/4 + fsteps; //TODO fix this
-      
-      fsteps  = (float)RA_STEPS / 24.0 * LST.hour();
-      fsteps += (float)RA_STEPS / 1440.0 * LST.minute();
-      fsteps += (float)RA_STEPS / 86400.0 * LST.second();
-
-      //HA = LST - RA
-      ra_steps = fsteps - ra_steps;
-
-      ra_steps -= ra_steps % 32;
-      if (RA_Stepper.getSteps()<0) {
-        ra_steps = ra_steps + RA_Stepper.getSteps();
-      } else {
-        ra_steps = ra_steps - RA_Stepper.getSteps();
-      }
-
-      if (ra_steps<0) {
-        if (ra_steps*2 < -RA_STEPS) ra_steps += RA_STEPS/2;
-      } else {
-        if (ra_steps*2 >  RA_STEPS) ra_steps -= RA_STEPS/2;
-      }
-      
-      if (abs(ra_steps)*2 > RA_STEPS) {
-        Serial.print('0');
-      } else {
-        Serial.print('1');
-        stopGuiding();
-        RA_Stepper.move(ra_steps);
-      }
-    }
-
-    //:Sd+89*00:00#
-    if (serialdata[0]==':' && serialdata[1]=='S' && serialdata[2]=='d' && serialdata[6]=='*' && serialdata[9]==':' && serialdata[12]=='#') {
-      recvd = true;
-      serialdata[i]='\0';
-      boolean negative = (serialdata[2] == '-');
-      byte hh = atoi(serialdata+4);
-      byte mm = atoi(serialdata+7);
-      byte ss = atoi(serialdata+10);
-      volatile float fsteps;
-      fsteps  = (float)DEC_STEPS / 360 * hh;
-      fsteps += (float)DEC_STEPS / 360 / 60 * mm;
-      fsteps += (float)DEC_STEPS / 360 / 60 / 60 * ss;
-      //fsteps += (float)DEC_STEPS / 360 / 60 / 60 / 10 * mss;
-      long dec_steps = fsteps;
-      
-      dec_steps += dec_steps % 32;
-      if (negative) {
-        dec_steps = DEC_STEPS/4 + dec_steps;
-      } else {
-        dec_steps = DEC_STEPS/4 - dec_steps;
-      }
-      
-      // Das muss von der RA-Richtugn abhängen und umgekehrt.
-      if (RA_Stepper.getSteps()>0) dec_steps = -dec_steps;
-
-      // Delta berechnen.
-      if (DEC_Stepper.getSteps()<0) {
-        dec_steps = dec_steps - DEC_Stepper.getSteps();
-      } else {
-        dec_steps = dec_steps + DEC_Stepper.getSteps();
-      }
-      
-      if (abs(dec_steps)*3>DEC_STEPS) {
-        Serial.print('0');
-      } else {
-        Serial.print('1');
-        DEC_Stepper.move(dec_steps);
-      }
     }
     
     if (serialdata[0]==':' && serialdata[1]=='M' && serialdata[2]=='S' && serialdata[3]=='#') {
