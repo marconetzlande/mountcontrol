@@ -259,6 +259,20 @@ void handleSerial() {
       //int analogValue = analogRead(VOLTAGE_PIN);
       Serial.println(analogValue);
     }
+
+    if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='B' && serialdata[3]=='S' && serialdata[4]=='#') {
+      recvd = true;
+      Serial.println();
+      Serial.print("RA Target: ");
+      Serial.println(ra_target_steps);      
+      Serial.print("DEC Target: ");
+      Serial.println(dec_target_steps);
+      Serial.print("RA Position: ");
+      Serial.println(RA_Stepper.getSteps());
+      Serial.print("DEC Position: ");
+      Serial.println(DEC_Stepper.getSteps());
+      Serial.println();
+    }
     
     if (recvd || serialdata[i] == '#' || (i>13)) {
       for(byte n = 0; n< 30-i; n++ ) {
