@@ -249,7 +249,7 @@ void handleSerial() {
       Serial.print('0');
     }
 
-    if (serialdata[0]==':' && serialdata[1]=='B' && serialdata[2]=='V' && serialdata[3]=='#') {
+    if (serialdata[0]=='#' && serialdata[1]==':' && serialdata[2]=='B' && serialdata[3]=='V' && serialdata[4]=='#') {
       recvd = true;
       // 4.8v = 12v 
       // 5v = 1023
