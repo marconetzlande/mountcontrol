@@ -19,7 +19,18 @@ void setup () {
   Serial.begin(115200);
   setupRTC();
   setupStepper();
-/*
+
+  /*
+  while (true) {
+    RA_Stepper.move(RA_STEPS);
+    while (RA_Stepper.nextAction()) Serial.println(RA_Stepper.getSteps());
+    delay(6000);
+  }
+  
+  abort();
+  */
+  
+  /*
   while (true) {
     getRTC_Time();
     Serial.print(rtcnow.year(), DEC);
@@ -36,5 +47,5 @@ void setup () {
     Serial.println();
     delay(500);
   }
-*/
+  */
 }
