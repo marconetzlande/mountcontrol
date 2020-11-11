@@ -30,8 +30,8 @@
 
 #define MIN_P                           500 //minimum time between pulses in μs
 #define RA_MICROSTEPS                  32UL
-#define RA_MAX_FREQUENCY            12800UL
-#define RA_ACCELERATION              4096UL
+#define RA_MAX_FREQUENCY            16896UL
+#define RA_ACCELERATION              6144UL
 
 /* currently not used
 #define DEC_MAX_FREQUENCY            6400UL
